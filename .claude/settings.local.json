@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm list:*)",
+      "Bash(npm test:*)",
+      "Bash(curl --version)",
+      "Bash(curl -s http://localhost:3000/api/health)",
+      "Bash(curl -s -X POST http://localhost:3000/api/register -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"testpatient\"\",\"\"password\"\":\"\"test123\"\",\"\"role\"\":\"\"patient\"\",\"\"name\"\":\"\"测试患者\"\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/register -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"test2\"\",\"\"password\"\":\"\"test123\"\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/register -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"test3\"\",\"\"password\"\":\"\"test123\"\",\"\"role\"\":\"\"invalid\"\",\"\"name\"\":\"\"测试\"\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/login -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"testpatient\"\",\"\"password\"\":\"\"test123\"\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/login -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"\"\",\"\"password\"\":\"\"\"\"}\")",
+      "Bash(curl -s http://localhost:3000/api/users)",
+      "Bash(curl -s http://localhost:3000/api/doctors)",
+      "Bash(curl -s http://localhost:3000/api/init)",
+      "Bash(curl -s -X POST http://localhost:3000/api/register -H \"Content-Type: application/json\" -d \"{\"\"username\"\":\"\"doctor_test\"\",\"\"password\"\":\"\"doctor123\"\",\"\"role\"\":\"\"doctor\"\",\"\"name\"\":\"\"测试医生\"\"}\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/consultations -H \"Content-Type: application/json\" -d \"{\"\"patient_id\"\":2,\"\"doctor_id\"\":3,\"\"type\"\":\"\"expert\"\",\"\"fee\"\":100}\")",
+      "Bash(powershell -Command \"Stop-Process -Id \\(Get-NetTCPConnection -LocalPort 3000\\).OwningProcess -Force -ErrorAction SilentlyContinue\")",
+      "Bash(curl -s http://localhost:3000/api/departments)",
+      "Bash(curl -s -X POST http://localhost:3000/api/consultations -H \"Content-Type: application/json\" -d \"{\"\"patient_id\"\":2,\"\"doctor_id\"\":3,\"\"type\"\":\"\"expert\"\",\"\"fee\"\":100,\"\"department_id\"\":null}\")",
+      "Bash(powershell -Command \"Get-Process -Name node -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/consultations -H \"Content-Type: application/json\" -d \"{\"\"patient_id\"\":2,\"\"doctor_id\"\":4,\"\"department_id\"\":1,\"\"type\"\":\"\"expert\"\",\"\"fee\"\":100}\")",
+      "Bash(curl -s http://localhost:3000/api/consultations)",
+      "Bash(curl -s -X POST http://localhost:3000/api/prescriptions -H \"Content-Type: application/json\" -d \"{\"\"consultation_id\"\":1,\"\"doctor_id\"\":4,\"\"content\"\":\"\"阿莫西林 500mg 每日三次\"\",\"\"medicines\"\":\"\"阿莫西林\"\"}\")",
+      "Bash(curl -s http://localhost:3000/api/prescriptions)",
+      "Bash(curl -s -X POST http://localhost:3000/api/orders -H \"Content-Type: application/json\" -d \"{\"\"consultation_id\"\":1,\"\"patient_id\"\":2,\"\"amount\"\":100,\"\"payment_method\"\":\"\"alipay\"\"}\")",
+      "Bash(curl -s http://localhost:3000/api/orders)",
+      "Bash(curl -s -X POST http://localhost:3000/api/messages -H \"Content-Type: application/json\" -d \"{\"\"consultation_id\"\":1,\"\"sender_id\"\":2,\"\"content\"\":\"\"你好医生，我有点不舒服\"\"}\")",
+      "Bash(curl -s http://localhost:3000/api/messages/1)",
+      "Bash(curl -s http://localhost:3000/api/stats)"
+    ]
+  }
+}

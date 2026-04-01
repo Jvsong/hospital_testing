@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 测试工具 - 云医在线</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; }
+        .navbar { background: white; padding: 15px 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .navbar a { color: #667eea; text-decoration: none; }
+        .container { max-width: 1000px; margin: 30px auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        textarea { height: 80px; }
+        button { background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #5568d3; }
+        .response { background: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin-top: 10px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { background: #e3f2fd; padding: 10px; margin-bottom: 15px; border-left: 4px solid #2196F3; color: #1565c0; }
+        .quick-links { margin-bottom: 20px; }
+        .quick-links a { display: inline-block; padding: 8px 15px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; margin-right: 10px; }
+        .quick-links a:hover { background: #5568d3; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/index.html">← 返回首页</a>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>🧪 API 测试工具</h2>
+            <div class="info">
+                API 基础地址: <strong>http://localhost:3000/api</strong>
+            </div>
+        </div>
+
+        <!-- 用户认证 -->
+        <div class="card">
+            <h2>👤 用户认证</h2>
+            <div class="form-group">
+                <label>用户名</label>
+                <select id="userPreset" onchange="selectUser()">
+                    <option value="">-- 选择预设用户 --</option>
+                    <option value="patient1">patient1 (患者)</option>
+                    <option value="patient2">patient2 (患者)</option>
+                    <option value="doctor1">doctor1 (医生)</option>
+                    <option value="doctor2">doctor2 (医生)</option>
+                    <option value="admin">admin (管理员)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="userPassword" placeholder="患者: patient123 医生: doctor123 管理员: admin123">
+            </div>
+            <button onclick="testLogin()">测试登录</button>
+            <div id="loginResponse" class="response" style="display:none;"></div>
+        </div>
+
+        <!-- 问诊管理 -->
+        <div class="card">
+            <h2>📋 问诊管理</h2>
+            <div class="quick-links">
+                <a href="javascript:void(0)" onclick="loadEndpoint('/consultations')">GET /consultations</a>
+                <a href="javascript:void(0)" onclick="getConsultationForm()">POST /consultations</a>
+            </div>
+            <div id="consultationContainer"></div>
+        </div>
+
+        <!-- 处方管理 -->
+        <div class="card">
+            <h2>💊 处方管理</h2>
+            <div class="quick-links">
+                <a href="javascript:void(0)" onclick="loadEndpoint('/prescriptions')">GET /prescriptions</a>
+                <a href="javascript:void(0)" onclick="getPrescriptionForm()">POST /prescriptions</a>
+            </div>
+            <div id="prescriptionContainer"></div>
+        </div>
+
+        <!-- 订单管理 -->
+        <div class="card">
+            <h2>💳 订单管理</h2>
+            <div class="quick-links">
+                <a href="javascript:void(0)" onclick="loadEndpoint('/orders')">GET /orders</a>
+            </div>
+            <div id="orderContainer"></div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="card">
+            <h2>📊 统计信息</h2>
+            <button onclick="loadEndpoint('/stats')">加载统计</button>
+            <div id="statsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        function selectUser() {
+            const select = document.getElementById('userPreset');
+            const username = select.value;
+            const passwords = {
+                'patient1': 'patient123',
+                'patient2': 'patient123',
+                'doctor1': 'doctor123',
+                'doctor2': 'doctor123',
+                'admin': 'admin123'
+            };
+            document.getElementById('userPassword').value = passwords[username] || '';
+        }
+
+        async function testLogin() {
+            const username = document.getElementById('userPreset').value;
+            const password = document.getElementById('userPassword').value;
+
+            if (!username || !password) {
+                alert('请选择用户并输入密码');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                showResponse('loginResponse', JSON.stringify(data, null, 2), res.ok);
+                if (res.ok && data.user) {
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                }
+            } catch (err) {
+                showResponse('loginResponse', '错误: ' + err.message, false);
+            }
+        }
+
+        async function loadEndpoint(endpoint) {
+            try {
+                const res = await fetch(`${API_URL}${endpoint}`);
+                const data = await res.json();
+                const containerId = endpoint.replace(/\//g, '') + 'Response';
+                showResponse(containerId, JSON.stringify(data, null, 2), res.ok);
+            } catch (err) {
+                alert('错误: ' + err.message);
+            }
+        }
+
+        function getConsultationForm() {
+            const html = `
+                <div class="form-group">
+                    <label>患者ID</label>
+                    <input type="number" id="consulPatientId" placeholder="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>医生ID</label>
+                    <input type="number" id="consulDoctorId" placeholder="2" value="2">
+                </div>
+                <div class="form-group">
+                    <label>问诊类型</label>
+                    <select id="consulType">
+                        <option value="expert">专家问诊</option>
+                        <option value="quick">快速问诊</option>
+                        <option value="prescription">开药问诊</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>症状描述</label>
+                    <textarea id="consulComplaint" placeholder="患者症状"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>费用</label>
+                    <input type="number" id="consulFee" placeholder="99.99" value="99.99" step="0.01">
+                </div>
+                <button onclick="submitConsultation()">提交</button>
+                <div id="consulResponse" class="response" style="display:none;"></div>
+            `;
+            document.getElementById('consultationContainer').innerHTML = html;
+        }
+
+        async function submitConsultation() {
+            try {
+                const data = {
+                    patient_id: parseInt(document.getElementById('consulPatientId').value),
+                    doctor_id: parseInt(document.getElementById('consulDoctorId').value),
+                    department_id: 1,
+                    type: document.getElementById('consulType').value,
+                    complaint: document.getElementById('consulComplaint').value,
+                    fee: parseFloat(document.getElementById('consulFee').value)
+                };
+                const res = await fetch(`${API_URL}/consultations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                showResponse('consulResponse', JSON.stringify(result, null, 2), res.ok);
+            } catch (err) {
+                alert('错误: ' + err.message);
+            }
+        }
+
+        function getPrescriptionForm() {
+            const html = `
+                <div class="form-group">
+                    <label>问诊ID</label>
+                    <input type="number" id="prescConsulId" placeholder="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>医生ID</label>
+                    <input type="number" id="prescDoctorId" placeholder="2" value="2">
+                </div>
+                <div class="form-group">
+                    <label>处方内容</label>
+                    <textarea id="prescContent" placeholder="处方详细内容"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>药品信息</label>
+                    <textarea id="prescMedicines" placeholder="药品信息，每行一种"></textarea>
+                </div>
+                <button onclick="submitPrescription()">提交</button>
+                <div id="prescResponse" class="response" style="display:none;"></div>
+            `;
+            document.getElementById('prescriptionContainer').innerHTML = html;
+        }
+
+        async function submitPrescription() {
+            try {
+                const data = {
+                    consultation_id: parseInt(document.getElementById('prescConsulId').value),
+                    doctor_id: parseInt(document.getElementById('prescDoctorId').value),
+                    content: document.getElementById('prescContent').value,
+                    medicines: document.getElementById('prescMedicines').value
+                };
+                const res = await fetch(`${API_URL}/prescriptions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                showResponse('prescResponse', JSON.stringify(result, null, 2), res.ok);
+            } catch (err) {
+                alert('错误: ' + err.message);
+            }
+        }
+
+        function showResponse(elementId, content, success = true) {
+            const elem = document.createElement('div');
+            elem.id = elementId;
+            elem.className = 'response ' + (success ? 'success' : 'error');
+            elem.textContent = content;
+            elem.style.display = 'block';
+
+            const existing = document.getElementById(elementId);
+            if (existing) existing.remove();
+
+            document.currentScript.parentElement.appendChild(elem);
+        }
+    </script>
+</body>
+</html>

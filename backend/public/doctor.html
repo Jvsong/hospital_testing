@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云医在线 - 医生端</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
+        .app-wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 18px; font-weight: bold; margin-bottom: 30px; display: flex; align-items: center; gap: 8px; }
+        .user-info { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+        .user-info p { font-size: 14px; margin: 5px 0; }
+        .nav-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+        .nav-item:hover { background: rgba(255,255,255,0.2); }
+        .nav-item.active { background: rgba(255,255,255,0.3); font-weight: bold; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header h1 { font-size: 28px; color: #2c3e50; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-primary { background: #f5576c; color: white; }
+        .btn-primary:hover { background: #e73a52; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-success:hover { background: #45a049; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        textarea { resize: vertical; height: 100px; }
+        .consultation-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #f5576c; margin-bottom: 15px; }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-ongoing { background: #cfe2ff; color: #084298; }
+        .status-completed { background: #d1e7dd; color: #0f5132; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f5f5f5; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #ddd; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f9f9f9; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 600px; width: 90%; }
+        .close { float: right; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
+        .close:hover { color: #000; }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">👨‍⚕️ 医生端</div>
+            <div class="user-info" id="userInfo">
+                <p id="userName">加载中...</p>
+                <p style="font-size: 12px; color: #ccc;">医生</p>
+            </div>
+            <div class="nav-item active" onclick="switchPage('home')">📊 首页</div>
+            <div class="nav-item" onclick="switchPage('consultations')">📋 接诊列表</div>
+            <div class="nav-item" onclick="switchPage('prescriptions')">💊 开处方</div>
+            <div class="nav-item" onclick="switchPage('reviews')">✅ 处方审核</div>
+            <div class="nav-item" onclick="logout()">🚪 登出</div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 首页 -->
+            <div class="page active" id="homePage">
+                <div class="header">
+                    <h1>工作台</h1>
+                </div>
+                <div class="card">
+                    <h2>今日统计</h2>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 20px;">
+                        <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold;" id="statPending">0</div>
+                            <div style="color: #666; font-size: 14px;">待接诊</div>
+                        </div>
+                        <div style="background: #f3e5f5; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold;" id="statOngoing">0</div>
+                            <div style="color: #666; font-size: 14px;">进行中</div>
+                        </div>
+                        <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold;" id="statCompleted">0</div>
+                            <div style="color: #666; font-size: 14px;">已完成</div>
+                        </div>
+                        <div style="background: #fff3e0; padding: 20px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold;" id="statPrescriptions">0</div>
+                            <div style="color: #666; font-size: 14px;">处方待审</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>待接诊问诊</h2>
+                    <div id="pendingList"></div>
+                </div>
+            </div>
+
+            <!-- 接诊列表 -->
+            <div class="page" id="consultationsPage">
+                <div class="header">
+                    <h1>接诊列表</h1>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>问诊ID</th>
+                                <th>患者</th>
+                                <th>类型</th>
+                                <th>症状</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consultationsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 开处方 -->
+            <div class="page" id="prescriptionsPage">
+                <div class="header">
+                    <h1>开具处方</h1>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>问诊ID</th>
+                                <th>患者</th>
+                                <th>症状</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prescriptionsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 处方审核 -->
+            <div class="page" id="reviewsPage">
+                <div class="header">
+                    <h1>处方审核 (药师端)</h1>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>处方ID</th>
+                                <th>医生</th>
+                                <th>内容</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviewsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 创建处方模态框 -->
+            <div class="modal" id="prescriptionModal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal('prescriptionModal')">&times;</span>
+                    <h2>开具处方</h2>
+                    <form onsubmit="submitPrescription(event)">
+                        <div class="form-group">
+                            <label>患者信息</label>
+                            <input type="text" id="modalPatient" readonly style="background: #f5f5f5;">
+                        </div>
+                        <div class="form-group">
+                            <label>处方内容</label>
+                            <textarea id="modalContent" placeholder="请输入处方内容" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>药品信息</label>
+                            <textarea id="modalMedicines" placeholder="药名 规格 用法 用量，每行一种" required></textarea>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">提交处方</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 接诊模态框 -->
+            <div class="modal" id="acceptModal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal('acceptModal')">&times;</span>
+                    <h2>接诊确认</h2>
+                    <p id="acceptInfo"></p>
+                    <button class="btn btn-success" onclick="acceptConsultation()" style="width: 100%; margin-top: 20px;">接受接诊</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentUser = null;
+        let selectedConsultationId = null;
+
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || user.role !== 'doctor') {
+                window.location.href = '/doctor-login.html';
+                return;
+            }
+            currentUser = user;
+            document.getElementById('userName').textContent = user.name + ' (' + user.username + ')';
+            initApp();
+        });
+
+        function initApp() {
+            loadStats();
+            loadPendingConsultations();
+            loadConsultations();
+            loadPrescriptionList();
+            loadReviews();
+        }
+
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageName + 'Page').classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/consultations?doctor_id=${currentUser.id}`);
+                const consultations = await res.json();
+                const pending = consultations.filter(c => c.status === 'pending').length;
+                const ongoing = consultations.filter(c => c.status === 'ongoing').length;
+                const completed = consultations.filter(c => c.status === 'completed').length;
+
+                const preRes = await fetch(`${API_URL}/prescriptions?status=pending`);
+                const prescriptions = await preRes.json();
+
+                document.getElementById('statPending').textContent = pending;
+                document.getElementById('statOngoing').textContent = ongoing;
+                document.getElementById('statCompleted').textContent = completed;
+                document.getElementById('statPrescriptions').textContent = prescriptions.length;
+            } catch (err) {
+                console.error('统计失败:', err);
+            }
+        }
+
+        async function loadPendingConsultations() {
+            try {
+                const res = await fetch(`${API_URL}/consultations?doctor_id=${currentUser.id}&status=pending`);
+                const consultations = await res.json();
+                const html = consultations.slice(0, 3).map(c => `
+                    <div class="consultation-card">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <strong>${c.patient_name}</strong>
+                                <p style="color: #666; font-size: 14px; margin-top: 5px;">症状: ${c.complaint || '未描述'}</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="showAcceptModal(${c.id}, '${c.patient_name}')">接诊</button>
+                        </div>
+                    </div>
+                `).join('');
+                document.getElementById('pendingList').innerHTML = html || '<p style="color: #999;">暂无待接诊问诊</p>';
+            } catch (err) {
+                console.error('加载待接诊失败:', err);
+            }
+        }
+
+        async function loadConsultations() {
+            try {
+                const res = await fetch(`${API_URL}/consultations?doctor_id=${currentUser.id}`);
+                const consultations = await res.json();
+                const html = consultations.map(c => `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.patient_name}</td>
+                        <td>${c.type}</td>
+                        <td>${c.complaint || '-'}</td>
+                        <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                        <td>
+                            ${c.status === 'pending' ? '<button class="btn btn-primary" onclick="showAcceptModal(' + c.id + ', \'' + c.patient_name + '\')">接诊</button>' :
+                             c.status === 'ongoing' ? '<button class="btn btn-primary" onclick="showPrescriptionModal(' + c.id + ', \'' + c.patient_name + '\')">开处方</button>' : '-'}
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('consultationsTable').innerHTML = html || '<tr><td colspan="6" style="text-align: center; color: #999;">暂无问诊记录</td></tr>';
+            } catch (err) {
+                console.error('加载问诊失败:', err);
+            }
+        }
+
+        async function loadPrescriptionList() {
+            try {
+                const res = await fetch(`${API_URL}/consultations?doctor_id=${currentUser.id}&status=ongoing`);
+                const consultations = await res.json();
+                const html = consultations.map(c => `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.patient_name}</td>
+                        <td>${c.complaint || '-'}</td>
+                        <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                        <td><button class="btn btn-primary" onclick="showPrescriptionModal(${c.id}, '${c.patient_name}')">开处方</button></td>
+                    </tr>
+                `).join('');
+                document.getElementById('prescriptionsTable').innerHTML = html || '<tr><td colspan="5" style="text-align: center; color: #999;">暂无待处理问诊</td></tr>';
+            } catch (err) {
+                console.error('加载处方列表失败:', err);
+            }
+        }
+
+        async function loadReviews() {
+            try {
+                const res = await fetch(`${API_URL}/prescriptions?status=pending`);
+                const prescriptions = await res.json();
+                const html = prescriptions.map(p => `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.doctor_name}</td>
+                        <td>${p.content.substring(0, 50)}...</td>
+                        <td><span class="status-badge status-pending">待审核</span></td>
+                        <td>
+                            <button class="btn btn-success" onclick="approvePrescription(${p.id})">通过</button>
+                            <button class="btn" style="background: #f44336; color: white;" onclick="rejectPrescription(${p.id})">拒绝</button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('reviewsTable').innerHTML = html || '<tr><td colspan="5" style="text-align: center; color: #999;">暂无待审核处方</td></tr>';
+            } catch (err) {
+                console.error('加载审核列表失败:', err);
+            }
+        }
+
+        function showAcceptModal(consultationId, patientName) {
+            selectedConsultationId = consultationId;
+            document.getElementById('acceptInfo').textContent = `确认接诊患者 "${patientName}" 的问诊吗？`;
+            document.getElementById('acceptModal').classList.add('active');
+        }
+
+        async function acceptConsultation() {
+            try {
+                const res = await fetch(`${API_URL}/consultations/${selectedConsultationId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'ongoing' })
+                });
+                if (res.ok) {
+                    alert('接诊成功！');
+                    closeModal('acceptModal');
+                    initApp();
+                }
+            } catch (err) {
+                alert('接诊失败: ' + err.message);
+            }
+        }
+
+        function showPrescriptionModal(consultationId, patientName) {
+            selectedConsultationId = consultationId;
+            document.getElementById('modalPatient').value = patientName;
+            document.getElementById('modalContent').value = '';
+            document.getElementById('modalMedicines').value = '';
+            document.getElementById('prescriptionModal').classList.add('active');
+        }
+
+        async function submitPrescription(e) {
+            e.preventDefault();
+            try {
+                const data = {
+                    consultation_id: selectedConsultationId,
+                    doctor_id: currentUser.id,
+                    content: document.getElementById('modalContent').value,
+                    medicines: document.getElementById('modalMedicines').value
+                };
+                const res = await fetch(`${API_URL}/prescriptions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert('处方已提交审核！');
+                    closeModal('prescriptionModal');
+                    initApp();
+                }
+            } catch (err) {
+                alert('提交处方失败: ' + err.message);
+            }
+        }
+
+        async function approvePrescription(prescriptionId) {
+            try {
+                const res = await fetch(`${API_URL}/prescriptions/${prescriptionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'approved', review_status: 'approved', review_by: currentUser.id })
+                });
+                if (res.ok) {
+                    alert('处方已通过！');
+                    loadReviews();
+                }
+            } catch (err) {
+                alert('处理失败: ' + err.message);
+            }
+        }
+
+        async function rejectPrescription(prescriptionId) {
+            try {
+                const res = await fetch(`${API_URL}/prescriptions/${prescriptionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'rejected', review_status: 'rejected', review_by: currentUser.id })
+                });
+                if (res.ok) {
+                    alert('处方已拒绝！');
+                    loadReviews();
+                }
+            } catch (err) {
+                alert('处理失败: ' + err.message);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '/doctor-login.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云医在线 - 管理后台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
+        .app-wrapper { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background: linear-gradient(135deg, #4158D0 0%, #C850C0 100%); color: white; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 18px; font-weight: bold; margin-bottom: 30px; display: flex; align-items: center; gap: 8px; }
+        .user-info { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+        .user-info p { font-size: 14px; margin: 5px 0; }
+        .nav-item { padding: 12px 15px; margin-bottom: 8px; border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+        .nav-item:hover { background: rgba(255,255,255,0.2); }
+        .nav-item.active { background: rgba(255,255,255,0.3); font-weight: bold; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .header h1 { font-size: 28px; color: #2c3e50; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-primary { background: #4158D0; color: white; }
+        .btn-primary:hover { background: #3a50b8; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-danger:hover { background: #da190b; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-success:hover { background: #45a049; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        textarea { resize: vertical; height: 100px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f5f5f5; padding: 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #ddd; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f9f9f9; }
+        .stat-box { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+        .stat-number { font-size: 28px; font-weight: bold; color: #4158D0; }
+        .stat-label { color: #999; font-size: 14px; margin-top: 5px; }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-active { background: #d1e7dd; color: #0f5132; }
+        .status-completed { background: #d1e7dd; color: #0f5132; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-paid { background: #d1e7dd; color: #0f5132; }
+        .status-unpaid { background: #f8d7da; color: #842029; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-bar input { flex: 1; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 600px; width: 90%; }
+        .close { float: right; font-size: 28px; font-weight: bold; color: #aaa; cursor: pointer; }
+        .close:hover { color: #000; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="logo">⚙️ 管理后台</div>
+            <div class="user-info" id="userInfo">
+                <p id="userName">加载中...</p>
+                <p style="font-size: 12px; color: #ccc;">管理员</p>
+            </div>
+            <div class="nav-item active" onclick="switchPage('dashboard')">📊 仪表盘</div>
+            <div class="nav-item" onclick="switchPage('users')">👥 用户管理</div>
+            <div class="nav-item" onclick="switchPage('consultations')">📋 问诊管理</div>
+            <div class="nav-item" onclick="switchPage('prescriptions')">💊 处方管理</div>
+            <div class="nav-item" onclick="switchPage('orders')">💳 订单管理</div>
+            <div class="nav-item" onclick="switchPage('departments')">🏢 科室管理</div>
+            <div class="nav-item" onclick="logout()">🚪 登出</div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 仪表盘 -->
+            <div class="page active" id="dashboardPage">
+                <div class="header">
+                    <h1>仪表盘</h1>
+                </div>
+
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-box">
+                        <div class="stat-number" id="statsPatients">0</div>
+                        <div class="stat-label">患者</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="statsDoctors">0</div>
+                        <div class="stat-label">医生</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="statsConsultations">0</div>
+                        <div class="stat-label">问诊次数</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="statsRevenue">¥0</div>
+                        <div class="stat-label">平台收入</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>最近问诊</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>问诊ID</th>
+                                <th>患者</th>
+                                <th>医生</th>
+                                <th>类型</th>
+                                <th>费用</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardConsultations"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 用户管理 -->
+            <div class="page" id="usersPage">
+                <div class="header">
+                    <h1>用户管理</h1>
+                    <button class="btn btn-primary" onclick="openUserModal()">添加用户</button>
+                </div>
+
+                <div class="card">
+                    <div class="search-bar">
+                        <select id="userRoleFilter" onchange="filterUsers()">
+                            <option value="">全部角色</option>
+                            <option value="patient">患者</option>
+                            <option value="doctor">医生</option>
+                            <option value="pharmacist">药师</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                        <input type="text" id="userSearch" placeholder="搜索用户名或姓名" onkeyup="filterUsers()">
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>姓名</th>
+                                <th>角色</th>
+                                <th>专科</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 问诊管理 -->
+            <div class="page" id="consultationsPage">
+                <div class="header">
+                    <h1>问诊管理</h1>
+                </div>
+
+                <div class="card">
+                    <div class="search-bar">
+                        <select id="consulStatusFilter" onchange="filterConsultations()">
+                            <option value="">全部状态</option>
+                            <option value="pending">待接诊</option>
+                            <option value="ongoing">进行中</option>
+                            <option value="completed">已完成</option>
+                        </select>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>问诊ID</th>
+                                <th>患者</th>
+                                <th>医生</th>
+                                <th>类型</th>
+                                <th>费用</th>
+                                <th>状态</th>
+                                <th>支付状态</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consultationsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 处方管理 -->
+            <div class="page" id="prescriptionsPage">
+                <div class="header">
+                    <h1>处方管理</h1>
+                </div>
+
+                <div class="card">
+                    <div class="search-bar">
+                        <select id="prescStatusFilter" onchange="filterPrescriptions()">
+                            <option value="">全部状态</option>
+                            <option value="pending">待审核</option>
+                            <option value="approved">已通过</option>
+                            <option value="rejected">已拒绝</option>
+                        </select>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>处方ID</th>
+                                <th>医生</th>
+                                <th>内容</th>
+                                <th>状态</th>
+                                <th>审核人</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prescriptionsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 订单管理 -->
+            <div class="page" id="ordersPage">
+                <div class="header">
+                    <h1>订单管理</h1>
+                </div>
+
+                <div class="card">
+                    <div class="search-bar">
+                        <select id="orderStatusFilter" onchange="filterOrders()">
+                            <option value="">全部状态</option>
+                            <option value="pending">待支付</option>
+                            <option value="paid">已支付</option>
+                        </select>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单ID</th>
+                                <th>患者ID</th>
+                                <th>金额</th>
+                                <th>支付方式</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 科室管理 -->
+            <div class="page" id="departmentsPage">
+                <div class="header">
+                    <h1>科室管理</h1>
+                    <button class="btn btn-primary" onclick="openDepartmentModal()">添加科室</button>
+                </div>
+
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>科室ID</th>
+                                <th>科室名称</th>
+                                <th>描述</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 添加用户模态框 -->
+            <div class="modal" id="userModal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal('userModal')">&times;</span>
+                    <h2>添加用户</h2>
+                    <form onsubmit="submitUser(event)">
+                        <div class="form-group">
+                            <label>用户名</label>
+                            <input type="text" id="modalUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>密码</label>
+                            <input type="password" id="modalPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label>姓名</label>
+                            <input type="text" id="modalName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>角色</label>
+                            <select id="modalRole" required>
+                                <option value="patient">患者</option>
+                                <option value="doctor">医生</option>
+                                <option value="pharmacist">药师</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">创建</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 添加科室模态框 -->
+            <div class="modal" id="departmentModal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal('departmentModal')">&times;</span>
+                    <h2>添加科室</h2>
+                    <form onsubmit="submitDepartment(event)">
+                        <div class="form-group">
+                            <label>科室名称</label>
+                            <input type="text" id="modalDeptName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>描述</label>
+                            <textarea id="modalDeptDesc"></textarea>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">创建</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentUser = null;
+        let allUsers = [];
+        let allConsultations = [];
+        let allPrescriptions = [];
+        let allOrders = [];
+
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || user.role !== 'admin') {
+                window.location.href = '/admin-login.html';
+                return;
+            }
+            currentUser = user;
+            document.getElementById('userName').textContent = user.name + ' (' + user.username + ')';
+            initApp();
+        });
+
+        function initApp() {
+            fetch(`${API_URL}/init`);
+            loadStats();
+            loadUsers();
+            loadConsultations();
+            loadPrescriptions();
+            loadOrders();
+            loadDepartments();
+        }
+
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageName + 'Page').classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/stats`);
+                const stats = await res.json();
+                document.getElementById('statsPatients').textContent = stats.patients || 0;
+                document.getElementById('statsDoctors').textContent = stats.doctors || 0;
+                document.getElementById('statsConsultations').textContent = stats.consultations || 0;
+                document.getElementById('statsRevenue').textContent = '¥' + (stats.revenue || 0).toFixed(2);
+
+                const consulRes = await fetch(`${API_URL}/consultations`);
+                const consultations = await consulRes.json();
+                const recent = consultations.slice(0, 5);
+                const html = recent.map(c => `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.patient_name}</td>
+                        <td>${c.doctor_name || '未分配'}</td>
+                        <td>${c.type}</td>
+                        <td>¥${c.fee}</td>
+                        <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                    </tr>
+                `).join('');
+                document.getElementById('dashboardConsultations').innerHTML = html;
+            } catch (err) {
+                console.error('加载统计失败:', err);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_URL}/users`);
+                allUsers = await res.json();
+                renderUsers(allUsers);
+            } catch (err) {
+                console.error('加载用户失败:', err);
+            }
+        }
+
+        function renderUsers(users) {
+            const html = users.map(u => `
+                <tr>
+                    <td>${u.id}</td>
+                    <td>${u.username}</td>
+                    <td>${u.name}</td>
+                    <td><span class="status-badge status-active">${u.role}</span></td>
+                    <td>${u.specialty || '-'}</td>
+                    <td><span class="status-badge status-active">${u.status || 'active'}</span></td>
+                    <td><button class="btn btn-danger" onclick="deleteUser(${u.id})">删除</button></td>
+                </tr>
+            `).join('');
+            document.getElementById('usersTable').innerHTML = html;
+        }
+
+        function filterUsers() {
+            const role = document.getElementById('userRoleFilter').value;
+            const search = document.getElementById('userSearch').value.toLowerCase();
+            const filtered = allUsers.filter(u =>
+                (!role || u.role === role) &&
+                (u.username.toLowerCase().includes(search) || u.name.toLowerCase().includes(search))
+            );
+            renderUsers(filtered);
+        }
+
+        async function loadConsultations() {
+            try {
+                const res = await fetch(`${API_URL}/consultations`);
+                allConsultations = await res.json();
+                renderConsultations(allConsultations);
+            } catch (err) {
+                console.error('加载问诊失败:', err);
+            }
+        }
+
+        function renderConsultations(consultations) {
+            const html = consultations.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.patient_name}</td>
+                    <td>${c.doctor_name || '未分配'}</td>
+                    <td>${c.type}</td>
+                    <td>¥${c.fee}</td>
+                    <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                    <td><span class="status-badge status-${c.payment_status}">${c.payment_status === 'paid' ? '已支付' : '未支付'}</span></td>
+                    <td>${new Date(c.created_at).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+            document.getElementById('consultationsTable').innerHTML = html;
+        }
+
+        function filterConsultations() {
+            const status = document.getElementById('consulStatusFilter').value;
+            const filtered = status ? allConsultations.filter(c => c.status === status) : allConsultations;
+            renderConsultations(filtered);
+        }
+
+        async function loadPrescriptions() {
+            try {
+                const res = await fetch(`${API_URL}/prescriptions`);
+                allPrescriptions = await res.json();
+                renderPrescriptions(allPrescriptions);
+            } catch (err) {
+                console.error('加载处方失败:', err);
+            }
+        }
+
+        function renderPrescriptions(prescriptions) {
+            const html = prescriptions.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>${p.doctor_name}</td>
+                    <td>${p.content.substring(0, 50)}...</td>
+                    <td><span class="status-badge status-${p.status}">${p.status}</span></td>
+                    <td>${p.review_by || '-'}</td>
+                    <td>
+                        ${p.status === 'pending' ?
+                            '<button class="btn btn-success" onclick="approvePrescription(' + p.id + ')">通过</button>' :
+                            '-'
+                        }
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('prescriptionsTable').innerHTML = html;
+        }
+
+        function filterPrescriptions() {
+            const status = document.getElementById('prescStatusFilter').value;
+            const filtered = status ? allPrescriptions.filter(p => p.status === status) : allPrescriptions;
+            renderPrescriptions(filtered);
+        }
+
+        async function loadOrders() {
+            try {
+                const res = await fetch(`${API_URL}/orders`);
+                allOrders = await res.json();
+                renderOrders(allOrders);
+            } catch (err) {
+                console.error('加载订单失败:', err);
+            }
+        }
+
+        function renderOrders(orders) {
+            const html = orders.map(o => `
+                <tr>
+                    <td>${o.id}</td>
+                    <td>${o.patient_id}</td>
+                    <td>¥${o.amount}</td>
+                    <td>${o.payment_method}</td>
+                    <td><span class="status-badge status-${o.status}">${o.status === 'paid' ? '已支付' : '待支付'}</span></td>
+                    <td>${new Date(o.created_at).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+            document.getElementById('ordersTable').innerHTML = html;
+        }
+
+        function filterOrders() {
+            const status = document.getElementById('orderStatusFilter').value;
+            const filtered = status ? allOrders.filter(o => o.status === status) : allOrders;
+            renderOrders(filtered);
+        }
+
+        async function loadDepartments() {
+            try {
+                const res = await fetch(`${API_URL}/departments`);
+                const departments = await res.json();
+                const html = departments.map(d => `
+                    <tr>
+                        <td>${d.id}</td>
+                        <td>${d.name}</td>
+                        <td>${d.description || '-'}</td>
+                        <td><button class="btn btn-danger" onclick="deleteDepartment(${d.id})">删除</button></td>
+                    </tr>
+                `).join('');
+                document.getElementById('departmentsTable').innerHTML = html;
+            } catch (err) {
+                console.error('加载科室失败:', err);
+            }
+        }
+
+        function openUserModal() {
+            document.getElementById('modalUsername').value = '';
+            document.getElementById('modalPassword').value = '';
+            document.getElementById('modalName').value = '';
+            document.getElementById('userModal').classList.add('active');
+        }
+
+        async function submitUser(e) {
+            e.preventDefault();
+            try {
+                const data = {
+                    username: document.getElementById('modalUsername').value,
+                    password: document.getElementById('modalPassword').value,
+                    name: document.getElementById('modalName').value,
+                    role: document.getElementById('modalRole').value
+                };
+                const res = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert('用户创建成功！');
+                    closeModal('userModal');
+                    loadUsers();
+                }
+            } catch (err) {
+                alert('创建失败: ' + err.message);
+            }
+        }
+
+        function openDepartmentModal() {
+            document.getElementById('modalDeptName').value = '';
+            document.getElementById('modalDeptDesc').value = '';
+            document.getElementById('departmentModal').classList.add('active');
+        }
+
+        async function submitDepartment(e) {
+            e.preventDefault();
+            alert('科室添加功能演示');
+            closeModal('departmentModal');
+        }
+
+        async function deleteUser(userId) {
+            if (confirm('确定删除该用户吗？')) {
+                alert('用户删除功能演示');
+                loadUsers();
+            }
+        }
+
+        async function deleteDepartment(deptId) {
+            if (confirm('确定删除该科室吗？')) {
+                alert('科室删除功能演示');
+                loadDepartments();
+            }
+        }
+
+        async function approvePrescription(prescriptionId) {
+            try {
+                const res = await fetch(`${API_URL}/prescriptions/${prescriptionId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'approved', review_status: 'approved', review_by: currentUser.id })
+                });
+                if (res.ok) {
+                    alert('处方已通过！');
+                    loadPrescriptions();
+                }
+            } catch (err) {
+                alert('操作失败: ' + err.message);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = '/admin-login.html';
+        }
+    </script>
+</body>
+</html>

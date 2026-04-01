@@ -1,0 +1,30 @@
+{
+  "folders": [
+    {
+      "path": "backend",
+      "name": "后台管理系统"
+    },
+    {
+      "path": "patient-app",
+      "name": "患者端APP"
+    },
+    {
+      "path": "doctor-app",
+      "name": "医生端APP"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "jest.runner"
+    ]
+  }
+}

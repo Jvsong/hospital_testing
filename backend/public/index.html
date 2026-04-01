@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云医在线 - 互联网医疗平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; }
+        .navbar { background: white; padding: 20px 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; color: #667eea; }
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a { color: #666; text-decoration: none; font-size: 16px; }
+        .nav-links a:hover { color: #667eea; }
+        .btn-login { background: #667eea; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; }
+        .btn-login:hover { background: #5568d3; }
+        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 40px; text-align: center; }
+        .hero h1 { font-size: 48px; margin-bottom: 20px; }
+        .hero p { font-size: 20px; margin-bottom: 30px; }
+        .hero-buttons { display: flex; gap: 20px; justify-content: center; }
+        .btn { padding: 15px 30px; font-size: 16px; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background: white; color: #667eea; font-weight: 600; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: rgba(255,255,255,0.3); color: white; border: 2px solid white; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.5); }
+        .features { padding: 80px 40px; }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; max-width: 1200px; margin: 0 auto; }
+        .feature-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
+        .feature-card h3 { color: #667eea; margin-bottom: 15px; font-size: 20px; }
+        .feature-card p { color: #666; line-height: 1.6; }
+        .modules { padding: 80px 40px; background: white; }
+        .modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; max-width: 1200px; margin: 0 auto; }
+        .module-card { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 40px; border-radius: 12px; text-align: center; cursor: pointer; transition: transform 0.3s; }
+        .module-card:hover { transform: translateY(-5px); }
+        .module-card h2 { color: #333; margin-bottom: 15px; font-size: 24px; }
+        .module-card p { color: #666; margin-bottom: 20px; }
+        .module-card a { display: inline-block; padding: 10px 25px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; }
+        .module-card a:hover { background: #5568d3; }
+        .patient-module { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .patient-module h2, .patient-module p { color: white; }
+        .doctor-module { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .doctor-module h2, .doctor-module p { color: white; }
+        .admin-module { background: linear-gradient(135deg, #4158D0 0%, #C850C0 100%); }
+        .admin-module h2, .admin-module p { color: white; }
+        .footer { background: #333; color: white; padding: 40px; text-align: center; }
+        h1, h2 { margin-bottom: 20px; }
+        section h2 { font-size: 36px; color: #333; text-align: center; margin-bottom: 50px; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <div class="navbar">
+        <div class="logo">🏥 云医在线</div>
+        <div class="nav-links">
+            <a href="#home">首页</a>
+            <a href="#features">功能</a>
+            <a href="#modules">平台</a>
+        </div>
+    </div>
+
+    <!-- 英雄区 -->
+    <div class="hero" id="home">
+        <h1>云医在线</h1>
+        <p>专业的互联网医疗问诊平台</p>
+        <p style="font-size: 16px; margin-bottom: 40px; opacity: 0.9;">连接患者与医生，提供优质的在线问诊服务</p>
+        <div class="hero-buttons">
+            <a href="/patient-login.html" class="btn btn-primary">患者登录</a>
+            <a href="/doctor-login.html" class="btn btn-primary" style="background: #f5576c; color: white; margin: 0 10px;">医生登录</a>
+            <a href="/admin-login.html" class="btn btn-primary" style="background: #764ba2; color: white;">管理员登录</a>
+        </div>
+    </div>
+
+    <!-- 功能介绍 -->
+    <section class="features" id="features">
+        <h2>核心功能</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>📋 专家问诊</h3>
+                <p>患者选择科室和医生，填写病情，支付问诊费后，医生进行专业咨询和指导。</p>
+            </div>
+            <div class="feature-card">
+                <h3>⚡ 快速问诊</h3>
+                <p>选择空闲医生进行即时问诊，获得快速的医学建议和指导。</p>
+            </div>
+            <div class="feature-card">
+                <h3>💊 开药问诊</h3>
+                <p>医生根据病情开具处方，药师审核后配送药品到患者手中。</p>
+            </div>
+            <div class="feature-card">
+                <h3>✅ 处方审核</h3>
+                <p>专业药师严格审核每一张处方，保障患者用药安全。</p>
+            </div>
+            <div class="feature-card">
+                <h3>📦 药品配送</h3>
+                <p>经审核的处方药品快速配送，让患者足不出户获得所需药物。</p>
+            </div>
+            <div class="feature-card">
+                <h3>💬 在线沟通</h3>
+                <p>实时消息系统，患者与医生随时沟通，解答医学疑惑。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 平台入口 -->
+    <section class="modules" id="modules">
+        <h2>进入平台</h2>
+        <div class="modules-grid">
+            <div class="module-card patient-module">
+                <h2>👤 患者端</h2>
+                <p>选择医生在线问诊</p>
+                <p style="font-size: 14px;">查看问诊历史、处方记录、订单管理</p>
+                <a href="/patient-login.html">进入患者端</a>
+            </div>
+            <div class="module-card doctor-module">
+                <h2>👨‍⚕️ 医生端</h2>
+                <p>接诊患者问题</p>
+                <p style="font-size: 14px;">开具处方、查看接诊列表、管理病历</p>
+                <a href="/doctor-login.html">进入医生端</a>
+            </div>
+            <div class="module-card admin-module">
+                <h2>⚙️ 管理后台</h2>
+                <p>平台管理和运营</p>
+                <p style="font-size: 14px;">用户管理、数据统计、订单管理</p>
+                <a href="/admin-login.html">进入后台</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- API测试工具 -->
+    <section style="padding: 40px; background: white; border-top: 1px solid #eee; margin-top: 20px;">
+        <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+            <h3 style="margin-bottom: 20px;">API 测试工具</h3>
+            <p style="margin-bottom: 20px; color: #666;">用于开发者测试和调试的工具</p>
+            <button onclick="window.location.href='/test-tool.html'" class="btn btn-primary" style="background: #667eea; color: white;">打开测试工具</button>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <div class="footer">
+        <p>&copy; 2026 云医在线 - 虚构测试项目 | 用于软件测试学习</p>
+        <p style="font-size: 12px; margin-top: 10px;">本平台为虚构测试项目，所有数据均为演示数据</p>
+    </div>
+
+    <!-- 快速登录脚本 -->
+    <script>
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                if (user.role === 'patient') window.location.href = '/patient.html';
+                else if (user.role === 'doctor') window.location.href = '/doctor.html';
+                else if (user.role === 'admin') window.location.href = '/admin.html';
+            }
+        });
+    </script>
+</body>
+</html>

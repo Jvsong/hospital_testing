@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医生登录 - 云医在线</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 400px; }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo h1 { color: #f5576c; font-size: 24px; margin-bottom: 5px; }
+        .logo p { color: #999; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        input:focus { outline: none; border-color: #f5576c; box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1); }
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        button:hover { opacity: 0.9; }
+        .alert { padding: 12px; margin-bottom: 20px; border-radius: 6px; }
+        .alert-error { background: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .links { text-align: center; margin-top: 20px; }
+        .links a { color: #f5576c; text-decoration: none; font-size: 14px; }
+        .links a:hover { text-decoration: underline; }
+        .divider { text-align: center; color: #999; margin: 20px 0; }
+        .demo-btn { background: #e0e0e0; color: #333; margin-top: 5px; }
+        .demo-btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>👨‍⚕️ 医生登录</h1>
+            <p>云医在线医生端</p>
+        </div>
+
+        <div id="alert" class="alert alert-error" style="display: none;"></div>
+
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="password" placeholder="请输入密码" required>
+            </div>
+            <button type="submit">登录</button>
+        </form>
+
+        <div class="divider">快速体验</div>
+
+        <button class="demo-btn" onclick="quickLogin('doctor1', 'doctor123')">医生1 登录</button>
+        <button class="demo-btn" onclick="quickLogin('doctor2', 'doctor123')">医生2 登录</button>
+
+        <div class="links">
+            <p><a href="/index.html">返回首页</a></p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        window.addEventListener('load', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user && user.role === 'doctor') {
+                window.location.href = '/doctor.html';
+            }
+        });
+
+        function quickLogin(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+            handleLogin(new Event('submit'));
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await res.json();
+                if (data.success && data.user.role === 'doctor') {
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    window.location.href = '/doctor.html';
+                } else {
+                    showAlert('用户名或密码错误');
+                }
+            } catch (err) {
+                showAlert('登录失败: ' + err.message);
+            }
+        }
+
+        function showAlert(message) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
